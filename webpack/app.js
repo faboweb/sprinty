@@ -1,9 +1,9 @@
 var path = require('path');
 
 module.exports = {
-    entry: './demo/demo_app.jsx',
+    entry: './app/app.jsx',
     output: {
-        path: path.resolve(__dirname, '../demo'),
+        path: path.resolve(__dirname, '../app'),
         filename: 'bundle.js'
     },
     module: {
@@ -29,8 +29,11 @@ module.exports = {
         }]
     },
     devServer: {
-        contentBase: path.join(__dirname, "../demo"),
+        contentBase: path.join(__dirname, "../app"),
         compress: true,
-        port: 8080
+        port: 8080,
+        headers: {
+            'Access-Control-Allow-Origin': '*'
+        }
     }
 }
