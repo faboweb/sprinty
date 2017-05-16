@@ -1,13 +1,15 @@
-import Octokat from 'octokat';
+const Octokat = require('octokat');
 
 let queryGitHub = (githubUrl, token) => (path) => {
-    let octo = new Octokat({token});
+    octo
     return request
         .get(githubUrl + path)
         .set("Authorization", `token ${token}`);
 }
 
-export function getMilestones(githubUrl, project, token) {
+export function getMilestones(githubUrl, organization, repo, token) {
+    let octo = new Octokat({token});
+    let gitRepo = octo.repos('philschatz', 'octokat.js')
     return queryGitHub(githubUrl, token)(`/orgs/${organization}/projects`)
 }
 
