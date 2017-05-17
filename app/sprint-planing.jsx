@@ -5,13 +5,13 @@ import config from '../config.js';
 import './planing.scss';
 var generate = require('project-name-generator');
 
-let octo = new Octokat({
-    token: config.token,
-    // rootURL: config.host,
-    // acceptHeader: 'application/vnd.github.cannonball-preview+json'
-});
-
-export const SprintPlaning = ({owner$, project$}) => {
+export const SprintPlaning = ({gitOAuth$, owner$, project$}) => {
+    let gitClient$ = gitOAuth$.map(token =>
+        new Octokat({
+            token,
+            rootURL: config.host,
+            // acceptHeader: 'application/vnd.github.cannonball-preview+json'
+        }));
     let issues$ = stream([]),
         pickedIssues$ = stream({}),
         startDate$ = stream(new Date()),
@@ -21,16 +21,20 @@ export const SprintPlaning = ({owner$, project$}) => {
     let pickedIssuesList$ = merge$(issues$, pickedIssues$).map(([issues, picked]) =>
         issues
             .filter(issue => picked[issue.id])
-            .map(issue => <Issue issue={issue} onpick={pickIssue(issue, pickedIssues$)} />));
+            .map(issue => <Issue issue={issue}
+                onpick={pickIssue(issue, pickedIssues$)}
+                onestimate={updateEstimate(owner$(), project$(), issue)} />));
     let unpickedIssuesList$ = merge$(issues$, pickedIssues$).map(([issues, picked]) =>
         issues
             .filter(issue => !picked[issue.id])
             .map(issue =>
-                <Issue issue={issue} onpick={pickIssue(issue, pickedIssues$)} />));
+                <Issue issue={issue}
+                    onpick={pickIssue(issue, pickedIssues$)}
+                    onestimate={updateEstimate(gitClient$(), owner$(), project$(), issue)} />));
     unpickedIssuesList$.map(console.log);
 
-    merge$(owner$, project$)
-        .map(([owner, project]) => {
+    merge$(gitClient$, owner$, project$)
+        .map(([octo, owner, project]) => {
             if (owner != '' && project != '') {
                 octo.repos(owner, project).issues.fetch({state: 'open'})
                     .then(res => issues$(res.items));
@@ -111,4 +115,14 @@ const pickIssue = (issue, pickedIssues$) => () => {
     let patch = {};
     patch[issue.id] = !pickedIssues$.value[issue.id];
     pickedIssues$.patch(patch);
+}
+
+const updateEstimate = (octo, owner, project, issue) => (estimate) => {
+    issue.labels = issue.labels
+        .filter(label => !label.name.startsWith('size '))
+        .concat({
+            "name": `size ${estimate}`,
+            "color": "f29513"
+            });
+    octo.repos(owner, project).issues(issue.number).update(issue);
 }

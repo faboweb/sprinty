@@ -1,7 +1,7 @@
 import { h, stream, merge$ } from 'zliq';
 import {getSize} from './utils.js';
 
-export const Issue = ({issue, onpick}) => {
+export const Issue = ({issue, onpick, onestimate}) => {
     return <tr class="issue">
         <td class="mdl-data-table__cell--non-numeric">{issue.title}</td>
         <td class="mdl-data-table__cell--non-numeric">
@@ -11,7 +11,7 @@ export const Issue = ({issue, onpick}) => {
         </td>
         <td class="mdl-data-table__cell--non-numeric">
             <div class="mdl-textfield mdl-js-textfield">
-                <input class="mdl-textfield__input" id="estimate" oninput={()=>{}} value={getSize(issue)} />
+                <input class="mdl-textfield__input" id="estimate" onchange={e=>onestimate(e.target.value)} value={getSize(issue)} />
             </div>
         </td>
         <td>

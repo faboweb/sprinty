@@ -12,8 +12,8 @@ let router$ = initRouter(),
     project$ = stream('sprinty');
 
 router$.map(({route, params}) => {
-    if (route==='/authenticate') {
-        gitOAuth$(params.access_token);
+    if (params.code!==undefined) {
+        gitOAuth$(params.code);
     }
 })
 
