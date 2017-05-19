@@ -42,3 +42,4 @@ jspm_packages
 benchmark.js
 *.worker.js
 config.js
+.node-persist/*

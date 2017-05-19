@@ -9,7 +9,7 @@ let octo = new Octokat({
     // acceptHeader: 'application/vnd.github.cannonball-preview+json'
 });
 
-export const SprintProgress = ({gitOAuth$, owner$, project$}) => {
+export const SprintProgress = ({gitOAuthCode$, owner$, project$}) => {
     let milestones$ = stream([]),
         milestone$ = stream({}),
         events$ = stream([]),
@@ -22,10 +22,14 @@ export const SprintProgress = ({gitOAuth$, owner$, project$}) => {
             <li><a href={issue.htmlUrl}>{issue.title}, {issue.state}</a></li>));
 
     merge$(owner$, project$)
-        .map(([owner, project]) => {
-            if (owner != '' && project != '') {
-                octo.repos(owner, project).milestones.fetch()
-                    .then(res => milestones$(res.items));
+        .map(([owner, repo]) => {
+            if (owner != '' && repo != '') {
+                fetch(`${config.gitProxy}/repos/${owner}/${repo}/milestones?code=${gitOAuthCode$()}`)
+                    .then(
+                        res => res.json(),
+                        ()=>gitOAuthCode$('')
+                    )
+                    .then(data => milestones$(data.items));
             }
         });
     merge$(owner$, project$, milestone$)

@@ -1,19 +1,19 @@
 import { h, stream, merge$, Router, initRouter } from 'zliq';
 import {SprintProgress} from './sprint-progress.jsx';
 import {SprintPlaning} from './sprint-planing.jsx';
-import {githubOAuthFlow, logout} from './github-oauth.js';
+import {githubOAuthFlow, logout, requestGithubToken} from './github-oauth.js';
 import config from '../config.js';
 
-const OAUTH_TOKEN = 'githubToken';
+const OAUTH_CODE = 'githubCode';
 
 let router$ = initRouter(),
-    gitOAuth$ = stream(getCookie(OAUTH_TOKEN)),
+    gitOAuthCode$ = stream(getCookie(OAUTH_CODE)),
     owner$ = stream('faboweb'),
     project$ = stream('sprinty');
 
 router$.map(({route, params}) => {
     if (params.code!==undefined) {
-        gitOAuth$(params.code);
+        gitOAuthCode$(params.code);
     }
 })
 
@@ -22,11 +22,11 @@ let app = <div class="demo-layout-transparent mdl-layout mdl-js-layout">
         <div class="mdl-grid">
             <div class="mdl-cell mdl-cell--4-col">
                 {
-                    gitOAuth$.map(x => x==''
+                    gitOAuthCode$.map(x => x==''
                         ? <a class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
-                            href={githubOAuthFlow(config.clientId)}>GitHub Login</a>
+                            href={githubOAuthFlow(config.gitOAuthUrl, config.gitClientId)}>GitHub Login</a>
                         : <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
-                            onclick={()=>logout(gitOAuth$)}>GitHub Logout</button>)
+                            onclick={()=>logout(OAUTH_CODE, gitOAuthCode$)}>GitHub Logout</button>)
                 }
             </div>
             <div class="mdl-cell mdl-cell--2-col">
@@ -52,10 +52,10 @@ let app = <div class="demo-layout-transparent mdl-layout mdl-js-layout">
         </div>
         <div class="mdl-grid">
             <Router route='/report' router$={router$}>
-                <SprintProgress gitOAuth$={gitOAuth$} owner$={owner$} project$={project$} />
+                <SprintProgress gitOAuthCode$={gitOAuthCode$} owner$={owner$} project$={project$} />
             </Router>
             <Router route='/' router$={router$}>
-                <SprintPlaning gitOAuth$={gitOAuth$} owner$={owner$} project$={project$} />
+                <SprintPlaning gitOAuthCode$={gitOAuthCode$} owner$={owner$} project$={project$} />
             </Router>
         </div>
     </main>

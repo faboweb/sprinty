@@ -5,13 +5,7 @@ import config from '../config.js';
 import './planing.scss';
 var generate = require('project-name-generator');
 
-export const SprintPlaning = ({gitOAuth$, owner$, project$}) => {
-    let gitClient$ = gitOAuth$.map(token =>
-        new Octokat({
-            token,
-            rootURL: config.host,
-            // acceptHeader: 'application/vnd.github.cannonball-preview+json'
-        }));
+export const SprintPlaning = ({gitOAuthCode$, owner$, project$}) => {
     let issues$ = stream([]),
         pickedIssues$ = stream({}),
         startDate$ = stream(new Date()),
@@ -33,12 +27,14 @@ export const SprintPlaning = ({gitOAuth$, owner$, project$}) => {
                     onestimate={updateEstimate(gitClient$(), owner$(), project$(), issue)} />));
     unpickedIssuesList$.map(console.log);
 
-    merge$(gitClient$, owner$, project$)
-        .map(([octo, owner, project]) => {
-            if (owner != '' && project != '') {
-                octo.repos(owner, project).issues.fetch({state: 'open'})
-                    .then(res => issues$(res.items));
-            }
+    merge$(owner$, project$)
+        .map(([owner, repo]) => {
+            fetch(`${config.gitProxy}/repos/${owner}/${repo}/issues?code=${gitOAuthCode$()}&state=open`)
+                .then(
+                    res => res.json(),
+                    ()=>gitOAuthCode$('')
+                )
+                .then(data => issues$(data.items))
         });
 
     return <div>
@@ -117,7 +113,7 @@ const pickIssue = (issue, pickedIssues$) => () => {
     pickedIssues$.patch(patch);
 }
 
-const updateEstimate = (octo, owner, project, issue) => (estimate) => {
+const updateEstimate = (octo, code, owner, project, issue) => (estimate) => {
     issue.labels = issue.labels
         .filter(label => !label.name.startsWith('size '))
         .concat({
