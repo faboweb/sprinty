@@ -1,54 +1,63 @@
-import { h, stream, merge$ } from 'zliq';
+import { h, stream, merge$, fetchy } from 'zliq';
 import {MilestoneChart} from './chart.jsx';
-import Octokat from 'octokat';
 import config from '../config.js';
 
-let octo = new Octokat({
-    token: config.token,
-    // rootURL: config.host,
-    // acceptHeader: 'application/vnd.github.cannonball-preview+json'
-});
-
-export const SprintProgress = ({gitOAuthCode$, owner$, project$}) => {
+export const SprintProgress = ({gitOAuthToken$, owner$, project$}) => {
     let milestones$ = stream([]),
         milestone$ = stream({}),
         events$ = stream([]),
         issues$ = stream([]);
     let milestoneList$ = milestones$.map(milestones =>
         milestones.map(milestone =>
-            <li onclick={(() => milestone$(milestone))}>{milestone.title}</li>));
+            <li
+                class="mdl-list__item"
+                onclick={(() => milestone$(milestone))}>{milestone.title}</li>));
     let issuesList$ = issues$.map(issues =>
         issues.map(issue =>
-            <li><a href={issue.htmlUrl}>{issue.title}, {issue.state}</a></li>));
+            <li class="mdl-list__item"><a href={issue.html_url}>{issue.title}, {issue.state}</a></li>));
 
-    merge$(owner$, project$)
-        .map(([owner, repo]) => {
-            if (owner != '' && repo != '') {
-                fetch(`${config.gitProxy}/repos/${owner}/${repo}/milestones?code=${gitOAuthCode$()}`)
-                    .then(
-                        res => res.json(),
-                        ()=>gitOAuthCode$('')
-                    )
-                    .then(data => milestones$(data.items));
+    merge$(owner$, project$, gitOAuthToken$)
+        .map(([owner, repo, token]) => {
+            if (owner != '' && repo != '' && token!='') {
+                fetch(`${config.gitProxy}/repos/${owner}/${repo}/milestones`,
+                    {
+                        headers: {
+                            'Authorization': `token ${token}`
+                        }
+                    })
+                .then(res => res.json())
+                .then(data => milestones$(data));
             }
         });
-    merge$(owner$, project$, milestone$)
-        .map(([owner, project, milestone]) => {
-            if (isEmpty(milestone)) return;
-            octo.repos(owner, project).issues.events.fetch({milestone: milestone.number})
-                .then(res => events$(res.items.reverse()));
+    merge$(owner$, project$, milestone$, gitOAuthToken$)
+        .map(([owner, repo, milestone, token]) => {
+            if (isEmpty(milestone) || token == '') return;
+            fetch(`${config.gitProxy}/repos/${owner}/${repo}/issues/events?milestone=${milestone.number}`,
+                {
+                    headers: {
+                        'Authorization': `token ${token}`
+                    }
+                })
+            .then(res => res.json())
+            .then(data => events$(data));
         });
-    merge$(owner$, project$, milestone$)
-        .map(([owner, project, milestone]) => {
-            if (isEmpty(milestone)) return;
-            octo.repos(owner, project).issues.fetch({milestone: milestone.number})
-                .then(res => issues$(res.items));
+    merge$(owner$, project$, milestone$, gitOAuthToken$)
+        .map(([owner, repo, milestone, token]) => {
+            if (isEmpty(milestone) || token == '') return;
+            fetch(`${config.gitProxy}/repos/${owner}/${repo}/issues?milestone=${milestone.number}`,
+                {
+                    headers: {
+                        'Authorization': `token ${token}`
+                    }
+                })
+            .then(res => res.json())
+            .then(data => issues$(data));
         });
 
     return <div>
         <h2>Sprint Progress</h2>
         <h3>Milestones</h3>
-        <ul>
+        <ul class="mdl-list">
             {milestoneList$}
             {milestoneList$.map(x => x.length == 0 ? <li>'No milestones in repo'</li> : null)}
         </ul>
@@ -59,20 +68,20 @@ export const SprintProgress = ({gitOAuthCode$, owner$, project$}) => {
                 return <div>
                     <h3>Milestone '{milestone$.$('title')}'</h3>
                     <p>
-                        From: {milestone$.$('createdAt').map(renderDate)},<br />
-                        Until: {milestone$.$('dueOn').map(renderDate)}
+                        From: {milestone$.$('created_at').map(renderDate)},<br />
+                        Until: {milestone$.$('due_on').map(renderDate)}
                     </p>
                     <h3>Burndown:</h3>
                     <div style="max-height: 300px">
                         {
-                            milestone$.$(['createdAt', 'dueOn']).map(([createdAt, dueOn]) => {
+                            milestone$.$(['created_at', 'due_on']).map(([createdAt, dueOn]) => {
                                 if (dueOn==null) return <p>Please define a due date to show a burndown chart.</p>;
-                                return <MilestoneChart from={createdAt} until={new Date(Date.parse(dueOn))} events$={events$} />;
+                                return <MilestoneChart from={new Date(Date.parse(createdAt))} until={new Date(Date.parse(dueOn))} events$={events$} />;
                             })
                         }
                     </div>
                     <h3>Issues:</h3>
-                    <ul>
+                    <ul class="mdl-list">
                         {issuesList$}
                     </ul>
                 </div>;

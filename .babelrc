@@ -5,6 +5,6 @@
         "modules": false
       }}]],
   "plugins": [
-    ["transform-h-jsx"]
+    ["transform-h-jsx", "transform-async-to-generator"]
   ]
 }

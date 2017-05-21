@@ -1,65 +1,99 @@
 'use strict';
 
-const superagent = require('superagent');
 var cors = require('cors');
 var storage = require('node-persist');
 storage.initSync();
+var unirest = require("unirest");
+var github = require('octonode');
+var bodyParser = require('body-parser')
 
 const config = require('../config.js').default;
-// const {initGitHub, getProjects} = require('./github-projects.js');
 
 var express = require('express');
 var app = express();
+app.use(bodyParser());
 
-// Add the route
-app.all('/git*', cors(), function (req, res) {
-    function request(token) {
-        // console.log('Token', token);
-        return superagent(req.method, config.gitAPIHost + req.params[0])
-            .set('Authorization', `token ${token}`)
-            // .set('Accept', 'application/json')
-            .end((err, _res) => res.send(err || _res.body));
-    }
+// github.auth.config({
+//   id: 'https://' + config.gitAPIHost,
+//   secret: config.gitClientSecret,
+//   apiUrl: 'https://' + config.gitAPIHost,
+//   webUrl: 'https://github.bus.zalan.do/'
+// });
 
-    let token = storage.getItemSync(req.query.code)
-    // console.log('Token', token);
-    if (token == null) {
-        requestGithubToken(config.gitOAuthUrl, config.gitClientId, config.gitClientSecret, req.query.code)
+app.post('/gittoken', cors(), function (req, res) {
+    requestGithubToken(config.gitOAuthUrl, config.gitClientId, config.gitClientSecret, req.query.code)
             .then((data) => {
                 if (data.error) {
                     console.log('Error requesting token', data.error_description);
-                    storage.removeItemSync(req.query.code);
                     res.status(500).send(data.error_description);
                     return null;
                 }
-                storage.setItemSync(req.query.code, data.access_token);
-                request(data.access_token);
+                res.send(data.access_token);
             }, err => {
                 console.log('Error requesting token', err);
                 res.status(500).send(err);
             });
-    } else {
-        request(token);
-    }
 });
+
+app.all('*', cors(), function(req, res) {
+    let token = req.get('authorization').substr(6);
+    var client = github.client(token, { hostname: config.gitAPIHost });
+
+    function callback(err, status, body, headers) {
+        if (err) {
+            res.status(err.statusCode).send(err);
+        }
+        res.send(body);
+    };
+
+    let request = req.url;
+    // console.log(req.method, request, req.body);
+    if (req.method === 'GET') {
+        client.get(req.path, {}, callback)
+    }
+    if (req.method === 'PATCH') {
+        client.patch(req.path, req.body, callback)
+    }
+    if (req.method === 'PUT') {
+        client.put(req.path, req.body, {}, callback)
+    }
+    if (req.method === 'POST') {
+        client.post(req.path, req.body, {}, callback)
+    }
+})
 
 app.listen(8989, function () {
   console.log('Example app listening on port 8989!');
 });
 
 export function requestGithubToken(gitOAuthUrl, client_id, client_secret, code) {
-    console.log('Requesting Token at', gitOAuthUrl);
+    console.log('Requesting Token for code', code);
     if (code==='' || code==null) {
         return Promise.reject('No code Present');
     }
-    return superagent
+
+    var req = unirest
         .post(`${gitOAuthUrl}/access_token`)
         .query({
             client_id,
             client_secret,
             code
         })
-        .set('Accept', 'application/json')
-        // .then((response) => response.json())
-        .then(res => res.body)
+
+    req.headers({
+        // "cache-control": "no-cache",
+        "accept": "application/json"
+    });
+
+
+    return new Promise((resolve, reject) => {
+        req.end(function (_res) {
+            if (_res.error) {
+                reject(_res.error);
+            };
+
+            console.log('Token response', _res.body);
+            resolve(_res.body);
+        })
+    });
 }

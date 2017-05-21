@@ -1,19 +1,20 @@
 import { h, stream, merge$, Router, initRouter } from 'zliq';
 import {SprintProgress} from './sprint-progress.jsx';
 import {SprintPlaning} from './sprint-planing.jsx';
-import {githubOAuthFlow, logout, requestGithubToken} from './github-oauth.js';
+import {getGitCodeUrl, logout, getGitToken} from './github-oauth.js';
 import config from '../config.js';
 
 const OAUTH_CODE = 'githubCode';
 
 let router$ = initRouter(),
-    gitOAuthCode$ = stream(getCookie(OAUTH_CODE)),
+    gitOAuthToken$ = stream(getCookie(OAUTH_CODE)),
     owner$ = stream('faboweb'),
     project$ = stream('sprinty');
 
-router$.map(({route, params}) => {
-    if (params.code!==undefined) {
-        gitOAuthCode$(params.code);
+router$.$(['route', 'params']).distinct().map(([route, params]) => {
+    if (params.code!==undefined && gitOAuthToken$.value === '') {
+        getGitToken(OAUTH_CODE, config.gitProxy + '/gittoken', params.code)
+            .then(gitOAuthToken$);
     }
 })
 
@@ -22,11 +23,11 @@ let app = <div class="demo-layout-transparent mdl-layout mdl-js-layout">
         <div class="mdl-grid">
             <div class="mdl-cell mdl-cell--4-col">
                 {
-                    gitOAuthCode$.map(x => x==''
+                    gitOAuthToken$.map(x => x==''
                         ? <a class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
-                            href={githubOAuthFlow(config.gitOAuthUrl, config.gitClientId)}>GitHub Login</a>
+                            href={getGitCodeUrl(config.gitOAuthUrl, config.gitClientId)}>GitHub Login</a>
                         : <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
-                            onclick={()=>logout(OAUTH_CODE, gitOAuthCode$)}>GitHub Logout</button>)
+                            onclick={()=>logout(OAUTH_CODE, gitOAuthToken$)}>GitHub Logout</button>)
                 }
             </div>
             <div class="mdl-cell mdl-cell--2-col">
@@ -52,13 +53,17 @@ let app = <div class="demo-layout-transparent mdl-layout mdl-js-layout">
         </div>
         <div class="mdl-grid">
             <Router route='/report' router$={router$}>
-                <SprintProgress gitOAuthCode$={gitOAuthCode$} owner$={owner$} project$={project$} />
+                <SprintProgress gitOAuthToken$={gitOAuthToken$} owner$={owner$} project$={project$} />
             </Router>
             <Router route='/' router$={router$}>
-                <SprintPlaning gitOAuthCode$={gitOAuthCode$} owner$={owner$} project$={project$} />
+                <SprintPlaning gitOAuthToken$={gitOAuthToken$} owner$={owner$} project$={project$} />
             </Router>
         </div>
     </main>
+    <div id="toast-container" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
 </div>;
 
 document.querySelector('app').appendChild(app);
