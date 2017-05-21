@@ -1,10 +1,8 @@
 import { h, stream, merge$, fetchy } from 'zliq';
 import {Issue} from './issue.jsx';
-import Octokat from 'octokat';
 import config from '../config.js';
 import './planing.scss';
 var generate = require('project-name-generator');
-var popsicle = require('popsicle')
 
 export const SprintPlaning = ({gitOAuthToken$, owner$, project$}) => {
     let issues$ = stream([]),

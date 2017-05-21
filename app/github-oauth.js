@@ -1,6 +1,3 @@
-import Octokat from 'octokat';
-import {fetchy} from 'zliq';
-
 export function logout(OAUTH_CODE, oauth$) {
     oauth$('');
     document.cookie = OAUTH_CODE + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
