@@ -1,8 +1,6 @@
 'use strict';
 
 var cors = require('cors');
-var storage = require('node-persist');
-storage.initSync();
 var unirest = require("unirest");
 var github = require('octonode');
 var bodyParser = require('body-parser')
@@ -12,13 +10,6 @@ const config = require('../config.js').default;
 var express = require('express');
 var app = express();
 app.use(bodyParser());
-
-// github.auth.config({
-//   id: 'https://' + config.gitAPIHost,
-//   secret: config.gitClientSecret,
-//   apiUrl: 'https://' + config.gitAPIHost,
-//   webUrl: 'https://github.bus.zalan.do/'
-// });
 
 app.post('/gittoken', cors(), function (req, res) {
     requestGithubToken(config.gitOAuthUrl, config.gitClientId, config.gitClientSecret, req.query.code)
