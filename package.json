@@ -18,9 +18,7 @@
     "express": "4.15.2",
     "http-proxy": "1.16.2",
     "jest": "^20.0.0",
-    "local-storage": "1.4.2",
     "node-persist": "2.0.11",
-    "octonode": "0.7.12",
     "project-name-generator": "2.1.3",
     "unirest": "0.5.1",
     "zliq": "1.2.2"
