@@ -6,10 +6,6 @@ dependencies:
     - npm i yarn
   override:
     - yarn
-general:
-  branches:
-    ignore:
-      - gh-pages
 test:
   override:
     - npm test

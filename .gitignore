@@ -40,7 +40,6 @@ jspm_packages
 # testing
 .tmp
 
-benchmark.js
-*.worker.js
 config.js
 .node-persist/*
+.build

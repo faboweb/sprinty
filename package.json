@@ -8,7 +8,10 @@
     "tdd": "jest --watch",
     "start": "webpack-dev-server --config webpack/app.js",
     "start:server": "babel-watch ./server/server.js",
-    "build": "webpack --config webpack/build.js"
+    "build": "npm run build:frontend && npm run build:server",
+    "build:frontend": "webpack --config webpack/build.js",
+    "build:server": "webpack --config webpack/server.js",
+    "start:production": "node .build/server.js"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
@@ -42,7 +45,7 @@
     "style-loader": "^0.13.1",
     "webpack": "^2.2.1",
     "webpack-dev-server": "^2.3.0",
-    "webpack-node-externals": "^1.5.4"
+    "webpack-node-externals": "1.6.0"
   },
   "repository": {
     "url": "https://github.com/faboweb/zliq.git",
