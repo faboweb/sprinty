@@ -33,8 +33,12 @@ export const SprintPlaning = ({gitOAuthToken$, owner$, project$}) => {
                     'Authorization': `token ${token}`
                 }
             })
+                .then(res => {
+                    res.status === 404 && notify('Repository not found')
+                    return res;
+                })
                 .then(res => res.json())
-                .then(data => issues$(data));
+                .then(data => issues$(data || []));
         });
 
     return <div>
@@ -172,12 +176,12 @@ function startSprint(owner, repo, token, title, until, pickedIssues) {
                         })
                     })
             }))
-        .then(()=> notifyDone(title));
+        .then(()=> notify('Sprint ' + title + ' generated!'));
     });
 }
 
-function notifyDone(title) {
+function notify(message) {
     var snackbarContainer = document.querySelector('#toast-container');
-    var data = {message: 'Sprint ' + title + ' generated!'};
+    var data = {message};
     snackbarContainer.MaterialSnackbar.showSnackbar(data);
 }

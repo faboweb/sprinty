@@ -39,7 +39,7 @@ app.all('*', cors(), function(req, res) {
     req.end(function (_res) {
         if (_res.error) {
             res.status(_res.statusCode).send(_res.error);
-            console.log(_res.body);
+            // console.log(_res.body);
             return;
         }
 

@@ -8,8 +8,8 @@ const OAUTH_CODE = 'githubCode';
 
 let router$ = initRouter(),
     gitOAuthToken$ = stream(getCookie(OAUTH_CODE)),
-    owner$ = stream('faboweb'),
-    project$ = stream('sprinty');
+    owner$ = stream(config.default_org),
+    project$ = stream(config.default_repo);
 
 router$.$(['route', 'params']).distinct().map(([route, params]) => {
     if (params.code!==undefined && gitOAuthToken$.value === '') {

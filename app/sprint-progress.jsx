@@ -95,9 +95,10 @@ function isEmpty(milestone) {
 }
 
 function renderDate(date) {
-    if (date.substr!==undefined) {
-        date = new Date(Date.parse(date));
+    if (date === null || date.substr===undefined) {
+        return 'Not terminated'
     }
+    date = new Date(Date.parse(date));
     var mm = date.getMonth() + 1; // getMonth() is zero-based
     var dd = date.getDate();
 
