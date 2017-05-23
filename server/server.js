@@ -4,7 +4,7 @@ var cors = require('cors');
 var unirest = require("unirest");
 var bodyParser = require('body-parser')
 
-const config = require('../config.js').default;
+const config = require('./config.js').default;
 
 var express = require('express');
 var app = express();
@@ -38,8 +38,8 @@ app.all('*', cors(), function(req, res) {
     });
     req.end(function (_res) {
         if (_res.error) {
-            res.status(500).send(_res.error);
-            console.log(_res);
+            res.status(_res.statusCode).send(_res.error);
+            console.log(_res.body);
             return;
         }
 
