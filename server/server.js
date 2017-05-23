@@ -29,16 +29,21 @@ app.all('*', cors(), function(req, res) {
     let token = req.get('authorization').substr(6);
 
     let url = "https://" + config.gitAPIHost + req.url;
-    var req = unirest(req.method, url, req.body);
-    req.headers({
+    var unireq = unirest(req.method, url);
+    unireq.headers({
         // "cache-control": "no-cache",
         "accept": "application/json",
         "Authorization": "token " + token,
         "User-Agent": 'Sprinty'
     });
-    req.end(function (_res) {
+    if (req.body != null) {
+        unireq
+            .type('json')
+            .send(req.body);
+    }
+    unireq.end(function (_res) {
         if (_res.error) {
-            res.status(_res.statusCode).send(_res.error);
+            res.status(_res.statusCode || 500).send(_res.error);
             // console.log(_res.body);
             return;
         }

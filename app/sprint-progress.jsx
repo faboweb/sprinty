@@ -2,7 +2,7 @@ import { h, stream, merge$, fetchy } from 'zliq';
 import {MilestoneChart} from './chart.jsx';
 import config from '../config.js';
 
-export const SprintProgress = ({gitOAuthToken$, owner$, project$}) => {
+export const SprintProgress = ({gitOAuthToken$, owner$, project$, router$}) => {
     let milestones$ = stream([]),
         milestone$ = stream({}),
         events$ = stream([]),
@@ -29,6 +29,11 @@ export const SprintProgress = ({gitOAuthToken$, owner$, project$}) => {
                 .then(data => milestones$(data));
             }
         });
+    merge$(router$, milestones$)
+        .map(([{params}, milestones]) => {
+            if (milestones !== [] && params.milestone !== undefined)
+                milestones$(milestones.find(m => m.number === params.milestone))
+        })
     merge$(owner$, project$, milestone$, gitOAuthToken$)
         .map(([owner, repo, milestone, token]) => {
             if (isEmpty(milestone) || token == '') return;
@@ -55,7 +60,6 @@ export const SprintProgress = ({gitOAuthToken$, owner$, project$}) => {
         });
 
     return <div>
-        <h2>Sprint Progress</h2>
         <h3>Milestones</h3>
         <ul class="mdl-list">
             {milestoneList$}
