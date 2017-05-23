@@ -7,7 +7,8 @@
     "test": "jest",
     "tdd": "jest --watch",
     "start": "webpack-dev-server --config webpack/app.js",
-    "start:server": "babel-watch ./server/server.js"
+    "start:server": "babel-watch ./server/server.js",
+    "build": "webpack --config webpack/build.js"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
@@ -32,6 +33,7 @@
     "babel-preset-es2015": "^6.22.0",
     "babel-register": "^6.24.0",
     "babel-watch": "2.0.6",
+    "copy-webpack-plugin": "4.0.1",
     "css-loader": "^0.26.1",
     "node-sass": "^4.5.0",
     "null-loader": "^0.1.1",

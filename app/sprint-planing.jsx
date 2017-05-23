@@ -1,6 +1,6 @@
 import { h, stream, merge$, fetchy } from 'zliq';
 import {Issue} from './issue.jsx';
-import config from '../config.js';
+import config from './config.js';
 import './planing.scss';
 var generate = require('project-name-generator');
 

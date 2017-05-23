@@ -2,7 +2,7 @@ import { h, stream, merge$, Router, initRouter } from 'zliq';
 import {SprintProgress} from './sprint-progress.jsx';
 import {SprintPlaning} from './sprint-planing.jsx';
 import {getGitCodeUrl, logout, getGitToken} from './github-oauth.js';
-import config from '../config.js';
+import config from './config.js';
 
 const OAUTH_CODE = 'githubCode';
 

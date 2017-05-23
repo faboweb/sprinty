@@ -1,6 +1,6 @@
 import { h, stream, merge$, fetchy } from 'zliq';
 import {MilestoneChart} from './chart.jsx';
-import config from '../config.js';
+import config from './config.js';
 
 export const SprintProgress = ({gitOAuthToken$, owner$, project$}) => {
     let milestones$ = stream([]),
