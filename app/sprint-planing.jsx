@@ -1,10 +1,11 @@
 import { h, stream, merge$, fetchy } from 'zliq';
+import {if$} from './utils.js';
 import {Issue} from './issue.jsx';
 import config from './config.js';
 import './planing.scss';
 var generate = require('project-name-generator');
 
-export const SprintPlaning = ({gitOAuthToken$, owner$, project$}) => {
+export const SprintPlaning = ({gitOAuthToken$, owner$, project$, router$}) => {
     let issues$ = stream([]),
         pickedIssues$ = stream({}),
         startDate$ = stream(new Date()),
@@ -22,6 +23,7 @@ export const SprintPlaning = ({gitOAuthToken$, owner$, project$}) => {
             .filter(issue => !picked[issue.number])
             .map(issue =>
                 <Issue issue={issue}
+                    ondescription={updateDescription(owner$(), project$(), issue, gitOAuthToken$())}
                     onpick={pickIssue(issue, pickedIssues$)}
                     onestimate={updateEstimate(owner$(), project$(), issue, gitOAuthToken$())} />));
 
@@ -81,38 +83,17 @@ export const SprintPlaning = ({gitOAuthToken$, owner$, project$}) => {
                     gitOAuthToken$(),
                     sprintName$(),
                     endDate$(),
-                    pickedIssues$())}
+                    pickedIssues$(),
+                    router$)}
                 class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
                 Start
             </button>
         </h4>
-        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
-            <thead>
-                <tr>
-                    <th class="mdl-data-table__cell--non-numeric">Title</th>
-                    <th class="mdl-data-table__cell--non-numeric"></th>
-                    <th class="mdl-data-table__cell--non-numeric">Estimate</th>
-                    <th class="mdl-data-table__cell--non-numeric"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {pickedIssuesList$}
-            </tbody>
-        </table>
+        {if$(pickedIssuesList$.map(x=>x.length === 0), 'No issues in sprint')}
+        {pickedIssuesList$}
         <h4>Backlog:</h4>
-        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
-            <thead>
-                <tr>
-                    <th class="mdl-data-table__cell--non-numeric">Title</th>
-                    <th class="mdl-data-table__cell--non-numeric"></th>
-                    <th class="mdl-data-table__cell--non-numeric">Estimate</th>
-                    <th class="mdl-data-table__cell--non-numeric"></th>
-                </tr>
-            </thead>
-            <tbody>
-            {unpickedIssuesList$}
-            </tbody>
-        </table>
+        {if$(unpickedIssuesList$.map(x=>x.length === 0), 'No open issues in backlog')}
+        {unpickedIssuesList$}
     </div>;
 }
 
@@ -130,11 +111,7 @@ const pickIssue = (issue, pickedIssues$) => () => {
     pickedIssues$.patch(patch);
 }
 
-const updateEstimate = (owner, repo, issue, token) => (estimate) => {
-    let labels = issue.labels
-        .filter(label => !label.name.startsWith('size '))
-        .map(label => label.name)
-        .concat(`size ${estimate}`);
+function updateIssue(owner, repo, issue, token, patch) {
     fetch(`${config.gitProxy}/repos/${owner}/${repo}/issues/${issue.number}`,
         {
             method: 'PATCH',
@@ -142,11 +119,27 @@ const updateEstimate = (owner, repo, issue, token) => (estimate) => {
                 'Authorization': `token ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(labels)
-        });
+            body: JSON.stringify(patch)
+        })
+    .then(
+        ()=> notify('Updated issue'),
+        ()=> notify('!!!!!Issue updating failed!!!!!')
+    )
 }
 
-function startSprint(owner, repo, token, title, until, pickedIssues) {
+const updateEstimate = (owner, repo, issue, token) => (estimate) => {
+    let labels = issue.labels
+    .filter(label => !label.name.startsWith('size '))
+    .map(label => label.name)
+    .concat(`size ${estimate}`);
+    updateIssue(owner, repo, issue, token, {labels});
+}
+
+const updateDescription = (owner, repo, issue, token) => (body) => {
+    updateIssue(owner, repo, issue, token, {body});
+}
+
+function startSprint(owner, repo, token, title, until, pickedIssues, router$) {
     fetch(`${config.gitProxy}/repos/${owner}/${repo}/milestones`,
         {
             method: 'POST',
@@ -176,8 +169,15 @@ function startSprint(owner, repo, token, title, until, pickedIssues) {
                         })
                     })
             }))
-        .then(()=> notify('Sprint ' + title + ' generated!'));
-    });
+        .then(
+            ()=> {
+                notify('Sprint ' + title + ' generated!');
+                router$.patch({route: '/report', query: { milestone: milestone.number }})
+            },
+            ()=> notify('!!!!!Sprint generation failed!!!!!')
+        );
+    })
+    .catch(e => notify(e.toString()))
 }
 
 function notify(message) {

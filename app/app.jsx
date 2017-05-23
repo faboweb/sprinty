@@ -49,10 +49,10 @@ let app = <div class="demo-layout-transparent mdl-layout mdl-js-layout mdl-layou
     <main class="mdl-layout__content">
         <div class="mdl-grid">
             <Router route='/report' router$={router$}>
-                <SprintProgress gitOAuthToken$={gitOAuthToken$} owner$={owner$} project$={project$} />
+                <SprintProgress gitOAuthToken$={gitOAuthToken$} owner$={owner$} project$={project$} router$={router$} />
             </Router>
             <Router route='/' router$={router$}>
-                <SprintPlaning gitOAuthToken$={gitOAuthToken$} owner$={owner$} project$={project$} />
+                <SprintPlaning gitOAuthToken$={gitOAuthToken$} owner$={owner$} project$={project$} router$={router$} />
             </Router>
         </div>
     </main>

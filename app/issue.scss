@@ -1,0 +1,42 @@
+.issue {
+    min-height: auto;
+    width: 100%;
+    transition: height 1s;
+
+    &.mdl-card--closed {
+        .mdl-card__supporting-text {
+            height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+    }
+
+    .mdl-card__title {
+        cursor: pointer;
+    }
+
+    .mdl-card__menu {
+        .mdl-textfield {
+            padding: 0;
+            margin-right: 12px;
+        }
+    }
+
+    .mdl-chip {
+        top: -4px;
+        right: 4px;
+        position: relative;
+    }
+
+    .mdl-card__supporting-text {
+        .mdl-textfield {
+            padding: 0;
+            max-width: 100% !important;
+            width: 100%;
+
+            &__input {
+                border-bottom: none;
+            }
+        }
+    }
+}
