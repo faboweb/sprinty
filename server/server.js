@@ -11,7 +11,7 @@ var app = express();
 
 app.use('/', express.static(__dirname + '/public'));
 
-app.post('/gittoken', function (req, res) {
+app.post('/gittoken', cors(), function (req, res) {
     requestGithubToken(config.gitOAuthUrl, config.gitClientId, config.gitClientSecret, req.query.code)
             .then((data) => {
                 if (data.error) {
@@ -26,7 +26,7 @@ app.post('/gittoken', function (req, res) {
             });
 });
 
-app.all('*', bodyParser(), function(req, res) {
+app.all('*', cors(), bodyParser(), function(req, res) {
     let token = req.get('authorization').substr(6);
 
     let url = "https://" + config.gitAPIHost + req.url;

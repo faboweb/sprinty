@@ -34,6 +34,12 @@ module.exports = {
         port: 8080,
         headers: {
             'Access-Control-Allow-Origin': '*'
-        }
+        },
+        // proxy: {
+        //     '/': {
+        //         target: 'http://localhost:8989',
+        //         secure: false
+        //     }
+        // }
     }
 }

@@ -1,11 +1,24 @@
 import { stream, merge$ } from 'zliq';
 
 export function getSize(issue) {
+    let label = issue.labels
+        .map(label => label.name)
+        .filter(label => label.startsWith('size '))[0];
+    return label.substr(5);
+}
+
+export const PRIORITY = {
+    critical: 0,
+    now: 1,
+    next: 2,
+    longterm: 3
+}
+export function getPriority(issue) {
     return issue.labels
         .map(label => label.name)
-        .filter(label => label.startsWith('size '))
-        .map(label => parseFloat(label.substr(5)))
-        .reduce((sum, cur) => sum + cur, 0);
+        .filter(label => label.startsWith('priority '))
+        .map(label => parseFloat(label.substr(9)))
+        .map(priority => PRIORITY[priority]);
 }
 
 // TODO move to zliq

@@ -17,7 +17,8 @@ export const SprintPlaning = ({gitOAuthToken$, owner$, project$, router$}) => {
             .filter(issue => picked[issue.number])
             .map(issue => <Issue issue={issue}
                 onpick={pickIssue(issue, pickedIssues$)}
-                onestimate={updateEstimate(owner$(), project$(), issue)} />));
+                onpriority={updatePriority(owner$(), project$(), issue, gitOAuthToken$())}
+                onestimate={updateEstimate(owner$(), project$(), issue, gitOAuthToken$())} />));
     let unpickedIssuesList$ = merge$(issues$, pickedIssues$).map(([issues, picked]) =>
         issues
             .filter(issue => !picked[issue.number])
@@ -25,6 +26,7 @@ export const SprintPlaning = ({gitOAuthToken$, owner$, project$, router$}) => {
                 <Issue issue={issue}
                     ondescription={updateDescription(owner$(), project$(), issue, gitOAuthToken$())}
                     onpick={pickIssue(issue, pickedIssues$)}
+                    onpriority={updatePriority(owner$(), project$(), issue, gitOAuthToken$())}
                     onestimate={updateEstimate(owner$(), project$(), issue, gitOAuthToken$())} />));
 
     merge$(owner$, project$, gitOAuthToken$)
@@ -132,6 +134,14 @@ const updateEstimate = (owner, repo, issue, token) => (estimate) => {
     .filter(label => !label.name.startsWith('size '))
     .map(label => label.name)
     .concat(`size ${estimate}`);
+    updateIssue(owner, repo, issue, token, {labels});
+}
+
+const updatePriority = (owner, repo, issue, token) => (priority) => {
+    let labels = issue.labels
+    .filter(label => !label.name.startsWith('priority '))
+    .map(label => label.name)
+    .concat(`priority ${priority}`);
     updateIssue(owner, repo, issue, token, {labels});
 }
 

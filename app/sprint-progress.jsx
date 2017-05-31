@@ -76,7 +76,7 @@ export const SprintProgress = ({gitOAuthToken$, owner$, project$, router$}) => {
                         Until: {milestone$.$('due_on').map(renderDate)}
                     </p>
                     <h3>Burndown:</h3>
-                    <div style="max-height: 300px">
+                    <div style="height: 300px; position: relative;">
                         {
                             milestone$.$(['created_at', 'due_on']).map(([createdAt, dueOn]) => {
                                 if (dueOn==null) return <p>Please define a due date to show a burndown chart.</p>;

@@ -1,7 +1,12 @@
+.issue--container {
+    position: relative;
+}
 .issue {
     min-height: auto;
     width: 100%;
     transition: height 1s;
+    position: initial;
+    overflow: visible;
 
     &.mdl-card--closed {
         .mdl-card__supporting-text {
