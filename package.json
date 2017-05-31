@@ -1,7 +1,7 @@
 {
   "name": "sprinty",
-  "version": "1.2.1",
-  "description": "slim and quick framework in low loc",
+  "version": "0.0.1",
+  "description": "free github sprint planing tool",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -11,7 +11,8 @@
     "build": "npm run build:frontend && npm run build:server",
     "build:frontend": "webpack --config webpack/build.js",
     "build:server": "webpack --config webpack/server.js",
-    "start:production": "node .build/server.js"
+    "start:production": "node .build/server.js",
+    "deploy": "git subtree push --prefix .build heroku master"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
